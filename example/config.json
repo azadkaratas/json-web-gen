@@ -1,0 +1,89 @@
+{
+    "title": "Your Title",
+    "header": {
+      "projectName": "Your Project Name",
+      "logo": "/path/to/logo.png"
+    },
+    "tabs": [
+      {
+        "title": "Tab Title 1",
+        "id": "tab-id1",
+        "subtabs": [
+          {
+            "title": "Subtab Title 1",
+            "fetchData": false,
+            "id": "subtab-id1",
+            "description": "Optional description"
+          }
+        ]
+      },
+      {
+        "title": "Tab Title 2",
+        "id": "tab-id2",
+        "subtabs": [
+          {
+            "title": "Subtab Title 2",
+            "fetchData": false,
+            "id": "subtab-id2",
+            "description": "Optional description"
+          },
+          {
+            "title": "Subtab Title 3",
+            "fetchData": false,
+            "id": "subtab-id3",
+            "description": "Optional description"
+          }
+        ]
+      }
+    ],
+    "content": [
+      {
+        "subtabId": "subtab-id1",
+        "items": [
+          {
+            "type": "text",
+            "id": "text-input",
+            "label": "Text Input"
+          },
+          {
+            "type": "button",
+            "id": "action-button",
+            "label": "Click Me",
+            "action": "customAction"
+          }
+        ]
+      },
+      {
+        "subtabId": "subtab-id2",
+        "items": [
+          {
+            "type": "text",
+            "id": "text-input",
+            "label": "Text Input"
+          },
+          {
+            "type": "button",
+            "id": "action-button",
+            "label": "Click Me",
+            "action": "customAction"
+          }
+        ]
+      },
+      {
+        "subtabId": "subtab-id3",
+        "items": [
+          {
+            "type": "text",
+            "id": "text-input",
+            "label": "Text Input"
+          },
+          {
+            "type": "button",
+            "id": "action-button",
+            "label": "Click Me",
+            "action": "customAction"
+          }
+        ]
+      }
+    ]
+  }
