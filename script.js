@@ -1,4 +1,4 @@
-// script.js
+// panel-library/script.js
 import { Api } from './api.js';
 
 fetch('config.json')
@@ -182,122 +182,6 @@ fetch('config.json')
 
       function renderItem(item, parentElement) {
         let element;
-        if (item.type === 'categoryDiv') {
-          const categoryDiv = document.createElement('div');
-          categoryDiv.className = 'category-div';
-          categoryDiv.id = item.id;
-          const categoryTitle = document.createElement('h4');
-          categoryTitle.textContent = item.title || 'Kategori';
-          categoryDiv.appendChild(categoryTitle);
-          item.items.forEach(subItem => renderItem(subItem, categoryDiv));
-          parentElement.appendChild(categoryDiv);
-          return;
-        }
-
-        if (item.type === 'listItem') {
-          const listContainer = document.createElement('div');
-          listContainer.className = 'list-item-container';
-          listContainer.id = item.id;
-          const listTitle = document.createElement('h4');
-          listTitle.textContent = item.label || 'Liste';
-          listContainer.appendChild(listTitle);
-
-          const listItems = document.createElement('div');
-          listItems.className = 'list-items';
-
-          item.items.forEach((listItem, index) => {
-            const listItemDiv = document.createElement('div');
-            listItemDiv.className = 'list-item';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'form-control';
-            input.id = `${item.id}-${index}`;
-            input.value = listItem.value || '';
-            input.placeholder = listItem.label || 'Öğe';
-            listItemDiv.appendChild(input);
-            listItems.appendChild(listItemDiv);
-            inputElements[`${item.id}-${index}`] = input;
-          });
-
-          const addButton = document.createElement('button');
-          addButton.className = 'btn btn-primary mt-2';
-          addButton.textContent = item.addButtonLabel || 'Ekle';
-          addButton.onclick = () => {
-            const newIndex = listItems.children.length;
-            const newItemDiv = document.createElement('div');
-            newItemDiv.className = 'list-item';
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.className = 'form-control';
-            newInput.id = `${item.id}-${newIndex}`;
-            newInput.placeholder = 'Yeni Öğe';
-            newItemDiv.appendChild(newInput);
-            listItems.appendChild(newItemDiv);
-            inputElements[`${item.id}-${newIndex}`] = newInput;
-          };
-
-          listContainer.appendChild(listItems);
-          listContainer.appendChild(addButton);
-          parentElement.appendChild(listContainer);
-          return;
-        }
-
-        if (item.type === 'customList') {
-          const listContainer = document.createElement('div');
-          listContainer.className = 'custom-list-container';
-          listContainer.id = item.id;
-          const listTitle = document.createElement('h4');
-          listTitle.textContent = item.label || 'Özelleştirilmiş Liste';
-          listContainer.appendChild(listTitle);
-
-          const table = document.createElement('table');
-          table.className = 'custom-list-table';
-
-          const thead = document.createElement('thead');
-          const headerRow = document.createElement('tr');
-          item.fields.forEach(field => {
-            const th = document.createElement('th');
-            th.textContent = field.label;
-            headerRow.appendChild(th);
-          });
-          thead.appendChild(headerRow);
-          table.appendChild(thead);
-
-          const tbody = document.createElement('tbody');
-          
-          fetch(item.dataSource)
-            .then(response => {
-              if (!response.ok) throw new Error(`Failed to fetch data from ${item.dataSource}`);
-              return response.json();
-            })
-            .then(listItems => {
-              listItems.forEach((listItem, rowIndex) => {
-                const row = document.createElement('tr');
-                item.fields.forEach(field => {
-                  const td = document.createElement('td');
-                  const input = createFieldElement(field, `${item.id}-${rowIndex}-${field.id}`, listItem[field.id]);
-                  td.appendChild(input);
-                  row.appendChild(td);
-                  inputElements[`${item.id}-${rowIndex}-${field.id}`] = input;
-                });
-                tbody.appendChild(row);
-              });
-            })
-            .catch(error => {
-              const errorRow = document.createElement('tr');
-              const errorCell = document.createElement('td');
-              errorCell.colSpan = item.fields.length;
-              errorCell.textContent = `Veri yüklenemedi: ${error.message}`;
-              errorRow.appendChild(errorCell);
-              tbody.appendChild(errorRow);
-            });
-
-          table.appendChild(tbody);
-          listContainer.appendChild(table);
-          parentElement.appendChild(listContainer);
-          return;
-        }
-
         switch (item.type) {
           case 'text':
           case 'password':
@@ -367,6 +251,7 @@ fetch('config.json')
             element.className = 'form-check-input me-2';
             element.id = item.id;
             element.checked = itemData[item.id] !== undefined ? itemData[item.id] : item.checked || false;
+            if (item.readonly) element.readOnly = true;
             inputElements[item.id] = element;
             break;
           case 'radio':
@@ -438,11 +323,119 @@ fetch('config.json')
             element.textContent = item.text;
             element.id = item.id;
             break;
+          case 'categoryDiv':
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category-div';
+            categoryDiv.id = item.id;
+            const categoryTitle = document.createElement('h4');
+            categoryTitle.textContent = item.title || 'Kategori';
+            categoryDiv.appendChild(categoryTitle);
+            item.items.forEach(subItem => renderItem(subItem, categoryDiv));
+            parentElement.appendChild(categoryDiv);
+            break;            
+          case 'customList':{
+            const listContainer = document.createElement('div');
+            listContainer.className = 'custom-list-container';
+            listContainer.id = item.id;
+            const listTitle = document.createElement('h4');
+            listTitle.textContent = item.label || 'Özelleştirilmiş Liste';
+            listContainer.appendChild(listTitle);
+
+            const table = document.createElement('table');
+            table.className = 'custom-list-table';
+
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            item.fields.forEach(field => {
+              const th = document.createElement('th');
+              th.textContent = field.label;
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            const listItems = itemData[item.id] || []; // fetchFromAPI veya dataSource’dan gelen veri
+            console.log(itemData);
+            if (Array.isArray(listItems) && listItems.length > 0) {
+              listItems.forEach((listItem, rowIndex) => {
+                const row = document.createElement('tr');
+                item.fields.forEach(field => {
+                  const td = document.createElement('td');
+                  const input = createFieldElement(field, `${item.id}-${rowIndex}-${field.id}`, listItem[field.id]);
+                  td.appendChild(input);
+                  row.appendChild(td);
+                  inputElements[`${item.id}-${rowIndex}-${field.id}`] = input;
+                });
+                tbody.appendChild(row);
+              });
+            } else {
+              const errorRow = document.createElement('tr');
+              const errorCell = document.createElement('td');
+              errorCell.colSpan = item.fields.length;
+              errorCell.textContent = 'Veri bulunamadı';
+              errorRow.appendChild(errorCell);
+              tbody.appendChild(errorRow);
+            }
+
+            table.appendChild(tbody);
+            listContainer.appendChild(table);
+            parentElement.appendChild(listContainer);
+            }
+            break;
+          case 'listItem':{
+            const listContainer = document.createElement('div');
+            listContainer.className = 'list-item-container';
+            listContainer.id = item.id;
+            const listTitle = document.createElement('h4');
+            listTitle.textContent = item.label || 'Liste';
+            listContainer.appendChild(listTitle);
+
+            const listItems = document.createElement('div');
+            listItems.className = 'list-items';
+
+            item.items.forEach((listItem, index) => {
+              const listItemDiv = document.createElement('div');
+              listItemDiv.className = 'list-item';
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.className = 'form-control';
+              input.id = `${item.id}-${index}`;
+              input.value = listItem.value || '';
+              input.placeholder = listItem.label || 'Öğe';
+              listItemDiv.appendChild(input);
+              listItems.appendChild(listItemDiv);
+              inputElements[`${item.id}-${index}`] = input;
+            });
+
+            const addButton = document.createElement('button');
+            addButton.className = 'btn btn-primary mt-2';
+            addButton.textContent = item.addButtonLabel || 'Ekle';
+            addButton.onclick = () => {
+              const newIndex = listItems.children.length;
+              const newItemDiv = document.createElement('div');
+              newItemDiv.className = 'list-item';
+              const newInput = document.createElement('input');
+              newInput.type = 'text';
+              newInput.className = 'form-control';
+              newInput.id = `${item.id}-${newIndex}`;
+              newInput.placeholder = 'Yeni Öğe';
+              newItemDiv.appendChild(newInput);
+              listItems.appendChild(newItemDiv);
+              inputElements[`${item.id}-${newIndex}`] = newInput;
+            };
+
+            listContainer.appendChild(listItems);
+            listContainer.appendChild(addButton);
+            parentElement.appendChild(listContainer);
+            }
+            break;
         }
 
         const wrapper = document.createElement('div');
         wrapper.className = 'mb-3';
-        if (item.type !== 'label' && item.type !== 'button') {
+        if (item.type !== 'label' && item.type !== 'button' && 
+            item.type !== 'customList' && item.type !== 'listItem' ) {
           const label = document.createElement('label');
           label.textContent = item.label;
           label.setAttribute('for', item.id);
@@ -486,6 +479,7 @@ fetch('config.json')
             element.type = 'checkbox';
             element.id = id;
             element.checked = value || false;
+            if(field.readonly) element.disabled="disabled";
             break;
         }
         return element;
