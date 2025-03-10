@@ -167,8 +167,16 @@ fetch('config.json')
         contentContainer.appendChild(description);
       }
 
-      const shouldFetchData = item.fetchData !== false;
-      const itemData = shouldFetchData ? await Api.fetchSubtabData(item) || {} : {};
+      let itemData = {};
+      if (item.fetchFromAPI) {
+        // fetchFromAPI varsa direkt endpoint’ten veri çek
+        const response = await fetch(item.fetchFromAPI);
+        if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
+        itemData = await response.json();
+      } else if (item.fetchData !== false) {
+        // fetchData false değilse Api.fetchSubtabData’yı kullan
+        itemData = await Api.fetchSubtabData(item) || {};
+      }
 
       const inputElements = {};
 
@@ -321,6 +329,23 @@ fetch('config.json')
             element.value = itemData[item.id] || '';
             if (item.readonly) element.readOnly = true;
             inputElements[item.id] = element;
+            break;
+          case 'textValue':
+            element = document.createElement('div');
+            element.className = 'text-value mb-2';
+            element.id = item.id;
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'text-value-label';
+            textSpan.textContent = item.text || 'No text defined';
+
+            const valueSpan = document.createElement('span');
+            valueSpan.className = 'text-value-content';
+            valueSpan.textContent = itemData[item.id] || 'No value';
+
+            element.appendChild(textSpan);
+            element.appendChild(document.createTextNode(': '));
+            element.appendChild(valueSpan);
             break;
           case 'select':
             element = document.createElement('select');

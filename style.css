@@ -220,6 +220,19 @@ body {
   background: transparent;
 }
 
+.text-value {
+  align-items: center;
+  gap: 5px;
+}
+
+.text-value-label {
+  font-weight: bold;
+}
+
+.text-value-content {
+  color: #333;
+}
+
 @media (min-width: 768px) {
   .content-wrapper { flex: 1; display: flex; }
   .content-area {
