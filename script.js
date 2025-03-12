@@ -1,6 +1,9 @@
 // panel-library/script.js
+
+// Import the Api module for handling backend interactions
 import { Api } from './api.js';
 
+// Fetch the configuration file (config.json) to initialize the application
 fetch('config.json')
   .then(response => {
     if (!response.ok) throw new Error('Config file could not be loaded');
@@ -12,7 +15,7 @@ fetch('config.json')
     const accordionContainer = document.getElementById('accordion');
     const contentContainer = document.getElementById('content');
 
-    // Customize header
+    // --- Customize the header and sidebar ---
     const headerProjectName = document.querySelector('header .col-6.col-md-8 h1');
     const headerLogo = document.querySelector('header .col-3.col-md-2 img');
     const sidebarHeaderLogo = document.querySelector('.sidebar-header img');
@@ -27,7 +30,7 @@ fetch('config.json')
       sidebarHeaderTitle.textContent = data.header.projectName || 'Project Name';
     }
 
-    // Generate tabs
+    // --- Generate accordion tabs dynamically ---
     data.tabs.forEach((tab, index) => {
       const accordionItem = document.createElement('div');
       accordionItem.className = 'accordion-item';
@@ -121,6 +124,7 @@ fetch('config.json')
       }
     }
 
+    // --- Function to display content for a tab or subtab ---
     async function showContent(item, contentData, tabTitle) {
       const overlay = document.getElementById('sidebarOverlay');
       const sidebar = document.getElementById('sidebar');
@@ -167,21 +171,41 @@ fetch('config.json')
         contentContainer.appendChild(description);
       }
 
-      let itemData = {};
-      if (item.fetchFromAPI) {
-        // fetchFromAPI varsa direkt endpoint’ten veri çek
-        const response = await fetch(item.fetchFromAPI);
-        if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
-        itemData = await response.json();
-      } else if (item.fetchData !== false) {
-        // fetchData false değilse Api.fetchSubtabData’yı kullan
-        itemData = await Api.fetchSubtabData(item) || {};
-      }
-
       const inputElements = {};
 
-      function renderItem(item, parentElement) {
+      // --- Fetch data for an individual item ---
+      async function fetchItemData(item) {
+        let itemData = {};
+        if (item.fetchFromAPI) {
+          try {
+            const response = await fetch(item.fetchFromAPI);
+            if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
+            itemData = await response.json();
+          } catch (error) {
+            console.error(error);
+            // Return an empty object to trigger "Content not loaded" in rendering
+            return {};
+          }
+        } else if (item.fetchData !== false && item.dataSource) {
+          try {
+            itemData = await Api.fetchSubtabData(item) || {};
+          } catch (error) {
+            console.error(error);
+            return {};
+          }
+        }
+        return itemData;
+      }
+
+      // --- Render an individual item (e.g., input, button, list) ---
+      async function renderItem(item, parentElement, parentData = {}) {
         let element;
+        // Use parentData if provided (for categoryDiv children), otherwise fetch item's own data
+        let itemData = parentData && Object.keys(parentData).length > 0 ? parentData : await fetchItemData(item);
+
+        // Check if fetch failed (empty itemData) and item relies on fetchFromAPI
+        const fetchFailed = item.fetchFromAPI && Object.keys(itemData).length === 0;
+
         switch (item.type) {
           case 'text':
           case 'password':
@@ -190,7 +214,7 @@ fetch('config.json')
             element.className = 'form-control mb-2';
             element.id = item.id;
             element.placeholder = item.label;
-            element.value = itemData[item.id] || '';
+            element.value = fetchFailed ? 'No content available' : (itemData[item.id] || item.value || '');
             if (item.readonly) element.readOnly = true;
             inputElements[item.id] = element;
             break;
@@ -200,7 +224,7 @@ fetch('config.json')
             element.className = 'form-control mb-2';
             element.id = item.id;
             element.placeholder = item.label;
-            element.value = itemData[item.id] || '';
+            element.value = fetchFailed ? 'No content available' : (itemData[item.id] || item.value || '');
             if (item.min) element.min = item.min;
             if (item.max) element.max = item.max;
             inputElements[item.id] = element;
@@ -210,7 +234,7 @@ fetch('config.json')
             element.className = 'form-control mb-2';
             element.id = item.id;
             element.placeholder = item.label;
-            element.value = itemData[item.id] || '';
+            element.value = fetchFailed ? 'No content available' : (itemData[item.id] || item.value || '');
             if (item.readonly) element.readOnly = true;
             inputElements[item.id] = element;
             break;
@@ -225,7 +249,7 @@ fetch('config.json')
 
             const valueSpan = document.createElement('span');
             valueSpan.className = 'text-value-content';
-            valueSpan.textContent = itemData[item.id] || 'No value';
+            valueSpan.textContent = fetchFailed ? 'No content available' : (itemData[item.id] || item.value || 'No value');
 
             element.appendChild(textSpan);
             element.appendChild(document.createTextNode(': '));
@@ -236,13 +260,19 @@ fetch('config.json')
             element.className = 'form-select mb-2';
             element.style.maxWidth = '200px';
             element.id = item.id;
-            item.options.forEach(option => {
+            if (fetchFailed) {
               const optionElement = document.createElement('option');
-              optionElement.value = option.value;
-              optionElement.textContent = option.text;
+              optionElement.textContent = 'No content available';
               element.appendChild(optionElement);
-            });
-            element.value = itemData[item.id] || item.options[0].value;
+            } else {
+              item.options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.text;
+                element.appendChild(optionElement);
+              });
+              element.value = itemData[item.id] || item.value || item.options[0].value;
+            }
             inputElements[item.id] = element;
             break;
           case 'checkbox':
@@ -250,32 +280,39 @@ fetch('config.json')
             element.type = 'checkbox';
             element.className = 'form-check-input me-2';
             element.id = item.id;
-            element.checked = itemData[item.id] !== undefined ? itemData[item.id] : item.checked || false;
-            if (item.readonly) element.readOnly = true;
+            element.checked = fetchFailed ? false : (itemData[item.id] !== undefined ? itemData[item.id] : item.checked || false);
+            if (item.readonly) element.disabled = true;
+            if (fetchFailed) element.disabled = true; // Disable checkbox if fetch fails
             inputElements[item.id] = element;
             break;
           case 'radio':
             element = document.createElement('div');
             element.className = 'form-check';
-            item.options.forEach((option, index) => {
-              const radioWrapper = document.createElement('div');
-              radioWrapper.className = 'form-check';
-              const radio = document.createElement('input');
-              radio.type = 'radio';
-              radio.className = 'form-check-input';
-              radio.name = item.id;
-              radio.id = `${item.id}-${index}`;
-              radio.value = option.value;
-              radio.checked = itemData[item.id] === option.value || (option.checked && !itemData[item.id]);
-              const radioLabel = document.createElement('label');
-              radioLabel.className = 'form-check-label';
-              radioLabel.setAttribute('for', `${item.id}-${index}`);
-              radioLabel.textContent = option.text;
-              radioWrapper.appendChild(radio);
-              radioWrapper.appendChild(radioLabel);
-              element.appendChild(radioWrapper);
-            });
-            inputElements[item.id] = {
+            if (fetchFailed) {
+              const errorLabel = document.createElement('span');
+              errorLabel.textContent = 'No content available';
+              element.appendChild(errorLabel);
+            } else {
+              item.options.forEach((option, index) => {
+                const radioWrapper = document.createElement('div');
+                radioWrapper.className = 'form-check';
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.className = 'form-check-input';
+                radio.name = item.id;
+                radio.id = `${item.id}-${index}`;
+                radio.value = option.value;
+                radio.checked = itemData[item.id] === option.value || (option.checked && !itemData[item.id]);
+                const radioLabel = document.createElement('label');
+                radioLabel.className = 'form-check-label';
+                radioLabel.setAttribute('for', `${item.id}-${index}`);
+                radioLabel.textContent = option.text;
+                radioWrapper.appendChild(radio);
+                radioWrapper.appendChild(radioLabel);
+                element.appendChild(radioWrapper);
+              });
+            }
+            inputElements[item.id] = fetchFailed ? element : {
               get value() {
                 const checkedRadio = element.querySelector('input[type="radio"]:checked');
                 return checkedRadio ? checkedRadio.value : null;
@@ -288,6 +325,7 @@ fetch('config.json')
             element.className = 'form-control mb-2';
             element.id = item.id;
             if (item.accept) element.accept = item.accept;
+            if (fetchFailed) element.disabled = true; // Disable file input if fetch fails
             inputElements[item.id] = element;
             break;
           case 'button':
@@ -314,32 +352,44 @@ fetch('config.json')
             break;
           case 'statusLed':
             element = document.createElement('div');
-            element.className = `status-led ms-2 ${itemData[item.id] ? 'led-green' : 'led-red'}`;
+            element.className = `status-led ms-2 ${fetchFailed ? 'led-red' : (itemData[item.id] ? 'led-green' : 'led-red')}`;
             element.id = item.id;
             inputElements[item.id] = element;
             break;
           case 'label':
             element = document.createElement('p');
-            element.textContent = item.text;
+            element.textContent = fetchFailed ? 'No content available' : item.text;
             element.id = item.id;
             break;
           case 'categoryDiv':
-            const categoryDiv = document.createElement('div');
-            categoryDiv.className = 'category-div';
-            categoryDiv.id = item.id;
+            element = document.createElement('div');
+            element.className = 'category-div';
+            element.id = item.id;
             const categoryTitle = document.createElement('h4');
-            categoryTitle.textContent = item.title || 'Kategori';
-            categoryDiv.appendChild(categoryTitle);
-            item.items.forEach(subItem => renderItem(subItem, categoryDiv));
-            parentElement.appendChild(categoryDiv);
-            break;            
-          case 'customList':{
-            const listContainer = document.createElement('div');
-            listContainer.className = 'custom-list-container';
-            listContainer.id = item.id;
+            categoryTitle.textContent = item.title || 'Category';
+            element.appendChild(categoryTitle);
+
+            // Fetch data once for the entire category if fetchFromAPI is defined
+            const categoryData = await fetchItemData(item);
+            // If fetch failed for the category, show a message
+            if (item.fetchFromAPI && Object.keys(categoryData).length === 0) {
+              const errorMessage = document.createElement('p');
+              errorMessage.textContent = 'No content available';
+              element.appendChild(errorMessage);
+            } else {
+              // Render all child items using the same category data
+              for (const subItem of item.items) {
+                await renderItem(subItem, element, categoryData);
+              }
+            }
+            break;
+          case 'customList':
+            element = document.createElement('div');
+            element.className = 'custom-list-container';
+            element.id = item.id;
             const listTitle = document.createElement('h4');
-            listTitle.textContent = item.label || 'Özelleştirilmiş Liste';
-            listContainer.appendChild(listTitle);
+            listTitle.textContent = item.label || 'Custom List';
+            element.appendChild(listTitle);
 
             const table = document.createElement('table');
             table.className = 'custom-list-table';
@@ -355,9 +405,15 @@ fetch('config.json')
             table.appendChild(thead);
 
             const tbody = document.createElement('tbody');
-            const listItems = itemData[item.id] || []; // fetchFromAPI veya dataSource’dan gelen veri
-            console.log(itemData);
-            if (Array.isArray(listItems) && listItems.length > 0) {
+            const listItems = Array.isArray(itemData) ? itemData : itemData[item.id] || [];
+            if (fetchFailed || (Array.isArray(listItems) && listItems.length === 0)) {
+              const errorRow = document.createElement('tr');
+              const errorCell = document.createElement('td');
+              errorCell.colSpan = item.fields.length;
+              errorCell.textContent = 'No content available';
+              errorRow.appendChild(errorCell);
+              tbody.appendChild(errorRow);
+            } else {
               listItems.forEach((listItem, rowIndex) => {
                 const row = document.createElement('tr');
                 item.fields.forEach(field => {
@@ -369,27 +425,18 @@ fetch('config.json')
                 });
                 tbody.appendChild(row);
               });
-            } else {
-              const errorRow = document.createElement('tr');
-              const errorCell = document.createElement('td');
-              errorCell.colSpan = item.fields.length;
-              errorCell.textContent = 'Veri bulunamadı';
-              errorRow.appendChild(errorCell);
-              tbody.appendChild(errorRow);
             }
 
             table.appendChild(tbody);
-            listContainer.appendChild(table);
-            parentElement.appendChild(listContainer);
-            }
+            element.appendChild(table);
             break;
           case 'listItem':{
-            const listContainer = document.createElement('div');
-            listContainer.className = 'list-item-container';
-            listContainer.id = item.id;
+            element = document.createElement('div');
+            element.className = 'list-item-container';
+            element.id = item.id;
             const listTitle = document.createElement('h4');
-            listTitle.textContent = item.label || 'Liste';
-            listContainer.appendChild(listTitle);
+            listTitle.textContent = item.label || 'List';
+            element.appendChild(listTitle);
 
             const listItems = document.createElement('div');
             listItems.className = 'list-items';
@@ -401,8 +448,8 @@ fetch('config.json')
               input.type = 'text';
               input.className = 'form-control';
               input.id = `${item.id}-${index}`;
-              input.value = listItem.value || '';
-              input.placeholder = listItem.label || 'Öğe';
+              input.value = fetchFailed ? 'No content available' : (listItem.value || '');
+              input.placeholder = listItem.label || 'Item';
               listItemDiv.appendChild(input);
               listItems.appendChild(listItemDiv);
               inputElements[`${item.id}-${index}`] = input;
@@ -410,7 +457,7 @@ fetch('config.json')
 
             const addButton = document.createElement('button');
             addButton.className = 'btn btn-primary mt-2';
-            addButton.textContent = item.addButtonLabel || 'Ekle';
+            addButton.textContent = item.addButtonLabel || 'Add';
             addButton.onclick = () => {
               const newIndex = listItems.children.length;
               const newItemDiv = document.createElement('div');
@@ -419,15 +466,14 @@ fetch('config.json')
               newInput.type = 'text';
               newInput.className = 'form-control';
               newInput.id = `${item.id}-${newIndex}`;
-              newInput.placeholder = 'Yeni Öğe';
+              newInput.placeholder = 'New Item';
               newItemDiv.appendChild(newInput);
               listItems.appendChild(newItemDiv);
               inputElements[`${item.id}-${newIndex}`] = newInput;
             };
 
-            listContainer.appendChild(listItems);
-            listContainer.appendChild(addButton);
-            parentElement.appendChild(listContainer);
+            element.appendChild(listItems);
+            element.appendChild(addButton);
             }
             break;
         }
@@ -435,7 +481,8 @@ fetch('config.json')
         const wrapper = document.createElement('div');
         wrapper.className = 'mb-3';
         if (item.type !== 'label' && item.type !== 'button' && 
-            item.type !== 'customList' && item.type !== 'listItem' ) {
+            item.type !== 'customList' && item.type !== 'listItem' && 
+            item.type !== 'categoryDiv') {
           const label = document.createElement('label');
           label.textContent = item.label;
           label.setAttribute('for', item.id);
@@ -445,6 +492,7 @@ fetch('config.json')
         parentElement.appendChild(wrapper);
       }
 
+      // --- Helper function to create field elements for customList ---
       function createFieldElement(field, id, value) {
         let element;
         switch (field.type) {
@@ -479,20 +527,23 @@ fetch('config.json')
             element.type = 'checkbox';
             element.id = id;
             element.checked = value || false;
-            if(field.readonly) element.disabled="disabled";
+            if (field.readonly) element.disabled = true;
             break;
         }
         return element;
       }
 
-      itemContent.items.forEach(item => renderItem(item, contentContainer));
+      // Render all items sequentially, waiting for async operations to complete
+      for (const contentItem of itemContent.items) {
+        await renderItem(contentItem, contentContainer);
+      }
     }
   })
   .catch(error => {
     document.getElementById('content').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
   });
 
-// Hamburger menu and sidebar control
+// --- Sidebar toggle controls ---
 document.getElementById('menuToggle').addEventListener('click', function () {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
