@@ -1,8 +1,3 @@
-// panel-library/script.js
-
-// Import the Api module for handling backend interactions
-import { Api } from './api.js';
-
 // Fetch the configuration file (config.json) to initialize the application
 fetch('config.json')
   .then(response => {
@@ -124,6 +119,49 @@ fetch('config.json')
       }
     }
 
+    // --- Fetch data for an individual item with hierarchical fallback ---
+    async function fetchItemData(item) {
+      let itemData = {};
+      // Only fetch if the item has its own fetchFromAPI
+      if (item.fetchFromAPI) {
+        try {
+          const response = await fetch(item.fetchFromAPI);
+          if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
+          itemData = await response.json();
+        } catch (error) {
+          console.error(`Error fetching from ${item.fetchFromAPI}:`, error);
+          return {};
+        }
+      }
+      // If no fetchFromAPI, try Api.fetchSubtabData if dataSource exists
+      else if (item.fetchData !== false && item.dataSource) {
+        try {
+          itemData = await fetchSubtabData(item) || {};
+        } catch (error) {
+          console.error(`Error fetching from dataSource:`, error);
+          return {};
+        }
+      }
+      return itemData;
+    }
+
+    async function fetchSubtabData(subtab) {
+      try {
+        const fetchUrl = subtab.dataSource || `${subtab.id}.json`;
+        const response = await fetch(fetchUrl);
+        if (!response.ok) throw new Error(`Veri çekilemedi: ${fetchUrl}`);
+        return await response.json();
+      } catch (error) {
+        console.error('Hata:', error);
+        return null;
+      }
+    }
+
+    async function triggerAction(action, inputs) {
+      console.warn(`Undefined action: ${action}`);
+      return `Hata: ${action} fonksiyonu script.js'de tanımlı değil`;
+    }
+
     // --- Function to display content for a tab or subtab ---
     async function showContent(item, contentData, tabTitle) {
       const overlay = document.getElementById('sidebarOverlay');
@@ -173,38 +211,20 @@ fetch('config.json')
 
       const inputElements = {};
 
-      // --- Fetch data for an individual item ---
-      async function fetchItemData(item) {
-        let itemData = {};
-        if (item.fetchFromAPI) {
-          try {
-            const response = await fetch(item.fetchFromAPI);
-            if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
-            itemData = await response.json();
-          } catch (error) {
-            console.error(error);
-            // Return an empty object to trigger "Content not loaded" in rendering
-            return {};
-          }
-        } else if (item.fetchData !== false && item.dataSource) {
-          try {
-            itemData = await Api.fetchSubtabData(item) || {};
-          } catch (error) {
-            console.error(error);
-            return {};
-          }
-        }
-        return itemData;
+      // Fetch subtab-level data once if it exists
+      let subtabData = {};
+      if (item.fetchFromAPI) {
+        subtabData = await fetchItemData(item);
       }
 
       // --- Render an individual item (e.g., input, button, list) ---
-      async function renderItem(item, parentElement, parentData = {}) {
+      async function renderItem(item, parentElement, parentData = {}, parentItem = null, subtabItem = null) {
         let element;
-        // Use parentData if provided (for categoryDiv children), otherwise fetch item's own data
-        let itemData = parentData && Object.keys(parentData).length > 0 ? parentData : await fetchItemData(item);
+        // Use item's own data if fetchFromAPI exists, otherwise use parentData or subtabData
+        let itemData = item.fetchFromAPI ? await fetchItemData(item) : (parentData && Object.keys(parentData).length > 0 ? parentData : subtabData);
 
-        // Check if fetch failed (empty itemData) and item relies on fetchFromAPI
-        const fetchFailed = item.fetchFromAPI && Object.keys(itemData).length === 0;
+        // Check if fetch failed (empty itemData) and item relies on fetchFromAPI at any level
+        const fetchFailed = (item.fetchFromAPI || (parentItem && parentItem.fetchFromAPI) || (subtabItem && subtabItem.fetchFromAPI)) && Object.keys(itemData).length === 0;
 
         switch (item.type) {
           case 'text':
@@ -339,7 +359,7 @@ fetch('config.json')
                 Object.keys(inputElements).forEach(id => {
                   inputs[id] = inputElements[id].value;
                 });
-                const result = await Api.triggerAction(item.action, inputs);
+                const result = await triggerAction(item.action, inputs);
                 if (typeof result === 'object') {
                   Object.keys(result).forEach(id => {
                     if (inputElements[id]) inputElements[id].value = result[id];
@@ -369,18 +389,9 @@ fetch('config.json')
             categoryTitle.textContent = item.title || 'Category';
             element.appendChild(categoryTitle);
 
-            // Fetch data once for the entire category if fetchFromAPI is defined
-            const categoryData = await fetchItemData(item);
-            // If fetch failed for the category, show a message
-            if (item.fetchFromAPI && Object.keys(categoryData).length === 0) {
-              const errorMessage = document.createElement('p');
-              errorMessage.textContent = 'No content available';
-              element.appendChild(errorMessage);
-            } else {
-              // Render all child items using the same category data
-              for (const subItem of item.items) {
-                await renderItem(subItem, element, categoryData);
-              }
+            // Render child items, passing categoryData as parentData
+            for (const subItem of item.items) {
+              await renderItem(subItem, element, itemData, item, subtabItem);
             }
             break;
           case 'customList':
@@ -473,13 +484,11 @@ fetch('config.json')
             };
 
             element.appendChild(listItems);
-            element.appendChild(addButton);
-            }
+            element.appendChild(addButton);}
             break;
         }
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'mb-3';
         if (item.type !== 'label' && item.type !== 'button' && 
             item.type !== 'customList' && item.type !== 'listItem' && 
             item.type !== 'categoryDiv') {
@@ -502,6 +511,7 @@ fetch('config.json')
             element.type = field.type;
             element.id = id;
             element.value = value || '';
+            if (field.readonly) element.disabled = true;
             break;
           case 'number':
             element = document.createElement('input');
@@ -510,6 +520,7 @@ fetch('config.json')
             element.value = value || '';
             if (field.min) element.min = field.min;
             if (field.max) element.max = field.max;
+            if (field.readonly) element.disabled = true;
             break;
           case 'select':
             element = document.createElement('select');
@@ -533,9 +544,9 @@ fetch('config.json')
         return element;
       }
 
-      // Render all items sequentially, waiting for async operations to complete
+      // Render all items, passing subtab data as fallback
       for (const contentItem of itemContent.items) {
-        await renderItem(contentItem, contentContainer);
+        await renderItem(contentItem, contentContainer, subtabData, null, item);
       }
     }
   })
