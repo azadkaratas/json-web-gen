@@ -122,19 +122,21 @@ fetch('config.json')
     // --- Fetch data for an individual item with hierarchical fallback ---
     async function fetchItemData(item) {
       let itemData = {};
-      // Only fetch if the item has its own fetchFromAPI
       if (item.fetchFromAPI) {
         try {
           const response = await fetch(item.fetchFromAPI);
           if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
-          itemData = await response.json();
+          // fileReader türü için düz metin, diğerleri için JSON
+          if (item.type === 'fileReader') {
+            itemData = await response.text(); // Düz metin olarak al
+          } else {
+            itemData = await response.json(); // Diğer türler için JSON
+          }
         } catch (error) {
           console.error(`Error fetching from ${item.fetchFromAPI}:`, error);
-          return {};
+          return item.type === 'fileReader' ? `Hata: ${error.message}` : {};
         }
-      }
-      // If no fetchFromAPI, try Api.fetchSubtabData if dataSource exists
-      else if (item.fetchData !== false && item.dataSource) {
+      } else if (item.fetchData !== false && item.dataSource) {
         try {
           itemData = await fetchSubtabData(item) || {};
         } catch (error) {
@@ -485,6 +487,34 @@ fetch('config.json')
 
             element.appendChild(listItems);
             element.appendChild(addButton);}
+            break;
+          case 'fileReader':
+            element = document.createElement('div');
+            element.className = 'file-reader-container';
+            element.id = item.id;
+          
+            const textArea = document.createElement('textarea');
+            textArea.style.overflowY = 'auto';
+            textArea.readOnly = true;
+            textArea.id = `${item.id}-content`;
+          
+            if (item.fetchFromAPI) {
+              fetch(item.fetchFromAPI) // Doğrudan fetch kullanıyoruz
+                .then(response => {
+                  if (!response.ok) throw new Error('Dosya yüklenemedi');
+                  return response.text(); // JSON değil, düz metin olarak al
+                })
+                .then(content => {
+                  textArea.value = content; // Metin içeriğini direkt yaz
+                })
+                .catch(error => {
+                  textArea.value = `Hata: ${error.message}`;
+                });
+            } else {
+              textArea.value = 'Hata: fetchFromAPI tanımlı değil';
+            }
+          
+            element.appendChild(textArea);
             break;
         }
 

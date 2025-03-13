@@ -233,6 +233,13 @@ body {
   color: #333;
 }
 
+.file-reader-container textarea {
+  width: 100%;
+  height: 650px;
+  overflow-y: auto;
+  resize: vertical;
+}
+
 @media (min-width: 768px) {
   .content-wrapper { flex: 1; display: flex; }
   .content-area {
