@@ -126,11 +126,10 @@ fetch('config.json')
         try {
           const response = await fetch(item.fetchFromAPI);
           if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
-          // fileReader türü için düz metin, diğerleri için JSON
           if (item.type === 'fileReader') {
-            itemData = await response.text(); // Düz metin olarak al
+            itemData = await response.text();
           } else {
-            itemData = await response.json(); // Diğer türler için JSON
+            itemData = await response.json();
           }
         } catch (error) {
           console.error(`Error fetching from ${item.fetchFromAPI}:`, error);
@@ -262,7 +261,7 @@ fetch('config.json')
             break;
           case 'textValue':
             element = document.createElement('div');
-            element.className = 'text-value mb-2';
+            element.className = 'text-value mb-3';
             element.id = item.id;
 
             const textSpan = document.createElement('span');
@@ -297,15 +296,27 @@ fetch('config.json')
             }
             inputElements[item.id] = element;
             break;
-          case 'checkbox':
-            element = document.createElement('input');
-            element.type = 'checkbox';
-            element.className = 'form-check-input me-2';
+          case 'checkbox':{
+            element = document.createElement('div');
+            element.className = 'checkbox-container d-flex align-items-center mb-2';
             element.id = item.id;
-            element.checked = fetchFailed ? false : (itemData[item.id] !== undefined ? itemData[item.id] : item.checked || false);
-            if (item.readonly) element.disabled = true;
-            if (fetchFailed) element.disabled = true; // Disable checkbox if fetch fails
-            inputElements[item.id] = element;
+          
+            // Left label
+            const label = document.createElement('span');
+            label.className = 'checkbox-label me-3';
+            label.textContent = item.label || 'Seçenek';
+          
+            // Right checkbox
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'custom-checkbox';
+            checkbox.checked = fetchFailed ? false : (itemData[item.id] !== undefined ? itemData[item.id] : item.checked || false);
+            if (item.readonly || fetchFailed) checkbox.disabled = true;
+          
+            element.appendChild(label);
+            element.appendChild(checkbox);
+            inputElements[item.id] = checkbox;
+            }
             break;
           case 'radio':
             element = document.createElement('div');
@@ -374,9 +385,19 @@ fetch('config.json')
             break;
           case 'statusLed':
             element = document.createElement('div');
-            element.className = `status-led ms-2 ${fetchFailed ? 'led-red' : (itemData[item.id] ? 'led-green' : 'led-red')}`;
+            element.className = 'status-led-container d-flex align-items-center mb-2';
             element.id = item.id;
-            inputElements[item.id] = element;
+          
+            const label = document.createElement('span');
+            label.className = 'status-led-label me-3';
+            label.textContent = item.label || 'Durum';
+          
+            const led = document.createElement('div');
+            led.className = `status-led ${fetchFailed ? 'led-red' : (itemData[item.id] ? 'led-green' : 'led-red')}`;
+            
+            element.appendChild(label);
+            element.appendChild(led);
+            inputElements[item.id] = led;
             break;
           case 'label':
             element = document.createElement('p');
@@ -499,13 +520,13 @@ fetch('config.json')
             textArea.id = `${item.id}-content`;
           
             if (item.fetchFromAPI) {
-              fetch(item.fetchFromAPI) // Doğrudan fetch kullanıyoruz
+              fetch(item.fetchFromAPI)
                 .then(response => {
                   if (!response.ok) throw new Error('Dosya yüklenemedi');
-                  return response.text(); // JSON değil, düz metin olarak al
+                  return response.text();
                 })
                 .then(content => {
-                  textArea.value = content; // Metin içeriğini direkt yaz
+                  textArea.value = content;
                 })
                 .catch(error => {
                   textArea.value = `Hata: ${error.message}`;
@@ -521,7 +542,8 @@ fetch('config.json')
         const wrapper = document.createElement('div');
         if (item.type !== 'label' && item.type !== 'button' && 
             item.type !== 'customList' && item.type !== 'listItem' && 
-            item.type !== 'categoryDiv') {
+            item.type !== 'categoryDiv' && item.type !== 'textValue' &&
+            item.type !== 'statusLed' && item.type !== 'checkbox' ) {
           const label = document.createElement('label');
           label.textContent = item.label;
           label.setAttribute('for', item.id);

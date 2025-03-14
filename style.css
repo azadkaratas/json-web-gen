@@ -117,19 +117,67 @@ body {
   font-weight: bold;
 }
 
+.status-led-container {
+  display: flex;
+  align-items: center;
+}
+
+.status-led-label {
+  font-weight: bold;
+  color: #333;
+}
+
 .status-led {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  display: inline-block;
+  background-color: #ccc;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease;
 }
 
-.led-green {
-  background-color: green;
+.status-led.led-green {
+  background-color: #28a745;
+  box-shadow: 0 0 9px rgba(40, 167, 69, 0.8);
 }
 
-.led-red {
-  background-color: red;
+.status-led.led-red {
+  background-color: #dc3545;
+  box-shadow: 0 0 9px rgba(220, 53, 69, 0.8);
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  appearance: none;
+  border: 2px solid #555;
+  border-radius: 4px;
+  background-color: #fff;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:checked {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.custom-checkbox:checked::after {
+  content: '\2713'; /* Unicode tick (✔) */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.custom-checkbox:disabled {
+  background-color: #ccc;
+  border-color: #999;
+  cursor: not-allowed;
 }
 
 .category-div {
