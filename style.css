@@ -353,4 +353,15 @@ body {
   .accordion {
       margin-top: 20px;
   }
+
+  header .col-md-2 {
+    width: 270px;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+
+  header .col-md-2 img {
+    width: auto;
+  }
 }

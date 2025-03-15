@@ -556,10 +556,12 @@ fetch('config.json')
             item.type !== 'customList' && item.type !== 'listItem' && 
             item.type !== 'categoryDiv' && item.type !== 'textValue' &&
             item.type !== 'statusLed' && item.type !== 'checkbox' ) {
-          const label = document.createElement('label');
-          label.textContent = item.label;
-          label.setAttribute('for', item.id);
-          wrapper.appendChild(label);
+          if(item.label){
+            const label = document.createElement('label');
+            label.textContent = item.label;
+            label.setAttribute('for', item.id);
+            wrapper.appendChild(label);
+          }
         }
         if (element) wrapper.appendChild(element);
         parentElement.appendChild(wrapper);
