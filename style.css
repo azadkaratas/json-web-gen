@@ -5,7 +5,7 @@ body {
 }
 
 .container {
-  max-width: 1500px;
+  max-width: 1200px;
   margin: 0 auto;
   background-color: white;
   box-shadow: 0 .2rem .65rem rgba(0, 0, 0, 0.5);
@@ -15,9 +15,7 @@ body {
 }
 
 .content-area {
-  margin-top: 100px;
-  margin-left: 0;
-  padding: 20px;
+  padding: 0;
   flex: 1;
   animation: fadeIn 0.3s ease-in;
 }
@@ -46,6 +44,50 @@ body {
 
 .content-area .btn {
   margin-top: 10px;
+}
+
+#content {
+  position: relative;
+  height: calc(100vh - 100px);
+  overflow: hidden;
+  margin-top: 100px;
+}
+
+.fixed-header {
+  position: fixed;
+  top: 100px;
+  width: calc(1200px - 270px);
+  background-color: #fff;
+  padding: 10px 20px;
+  z-index: 900;
+}
+
+.scrollable-content {
+  margin-top: 50px;
+  height: calc(100vh - 150px);
+  overflow-y: auto;
+  padding: 15px;
+}
+
+@media (max-width: 767px) {
+  .fixed-header {
+    display: none;
+  }
+
+  header::after {
+    content: attr(data-breadcrumb);
+    position: absolute;
+    left: 100px;
+  }
+
+  .scrollable-content {
+    margin-top: 0;
+    height: calc(100vh - 100px);
+  }
+
+  #content {
+    margin-top: 100px;
+  }
 }
 
 .sidebar {
@@ -296,7 +338,7 @@ body {
   .sidebar {
       position: fixed;
       top: 100px;
-      left: max(0px, calc((100% - 1500px) / 2));
+      left: max(0px, calc((100% - 1200px) / 2));
       height: calc(100vh - 100px);
   }
   .sidebar-header {

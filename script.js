@@ -165,6 +165,8 @@ fetch('config.json')
 
     // --- Function to display content for a tab or subtab ---
     async function showContent(item, contentData, tabTitle) {
+      const header = document.querySelector('header');
+      header.setAttribute('data-breadcrumb', item.subtabs ? item.title : `${tabTitle} > ${item.title}`);
       const overlay = document.getElementById('sidebarOverlay');
       const sidebar = document.getElementById('sidebar');
       if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
@@ -198,21 +200,31 @@ fetch('config.json')
         return;
       }
 
+      // Sabit başlık için kapsayıcı
+      const headerContainer = document.createElement('div');
+      headerContainer.className = 'fixed-header';
+
       const pageTitle = document.createElement('h3');
-      pageTitle.className = 'sub-content-header mb-3';
+      pageTitle.className = 'sub-content-header mb-0'; // mb-0 ile alt boşluğu kaldır
       pageTitle.textContent = item.subtabs ? item.title : `${tabTitle} > ${item.title}`;
-      contentContainer.appendChild(pageTitle);
+      headerContainer.appendChild(pageTitle);
+
+      // Kaydırılabilir içerik için kapsayıcı
+      const scrollableContent = document.createElement('div');
+      scrollableContent.className = 'scrollable-content';
 
       if (item.description) {
         const description = document.createElement('p');
         description.className = 'sub-content-description mb-3';
         description.textContent = item.description;
-        contentContainer.appendChild(description);
+        scrollableContent.appendChild(description);
       }
 
-      const inputElements = {};
+      // contentContainer’a ekle
+      contentContainer.appendChild(headerContainer);
+      contentContainer.appendChild(scrollableContent);
 
-      // Fetch subtab-level data once if it exists
+      const inputElements = {};
       let subtabData = {};
       if (item.fetchFromAPI) {
         subtabData = await fetchItemData(item);
@@ -598,7 +610,7 @@ fetch('config.json')
 
       // Render all items, passing subtab data as fallback
       for (const contentItem of itemContent.items) {
-        await renderItem(contentItem, contentContainer, subtabData, null, item);
+        await renderItem(contentItem, scrollableContent, subtabData, null, item);
       }
     }
   })
