@@ -150,7 +150,7 @@ fetch('config.json')
       try {
         const fetchUrl = subtab.dataSource || `${subtab.id}.json`;
         const response = await fetch(fetchUrl);
-        if (!response.ok) throw new Error(`Veri çekilemedi: ${fetchUrl}`);
+        if (!response.ok) throw new Error(`Fetch error: ${fetchUrl}`);
         return await response.json();
       } catch (error) {
         console.error('Hata:', error);
@@ -159,8 +159,22 @@ fetch('config.json')
     }
 
     async function triggerAction(action, inputs) {
-      console.warn(`Undefined action: ${action}`);
-      return `Hata: ${action} fonksiyonu script.js'de tanımlı değil`;
+      try {
+        console.log(inputs);
+        const response = await fetch(`${action}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(inputs)
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Action failed: ${errorText}`);
+        }
+        const result = await response.json();
+        return result.message || 'Action successful.';
+      } catch (error) {
+        return `Hata: ${error.message}`;
+      }
     }
 
     // --- Function to display content for a tab or subtab ---
@@ -382,12 +396,33 @@ fetch('config.json')
               element.onclick = async () => {
                 const inputs = {};
                 Object.keys(inputElements).forEach(id => {
-                  inputs[id] = inputElements[id].value;
+                  const elem = inputElements[id];
+                  if (elem.tagName === 'INPUT') {
+                    if (elem.type === 'checkbox') {
+                      inputs[id] = elem.checked; // Checkbox için checked kullan
+                    } else if (elem.type === 'file') {
+                      inputs[id] = elem; // File input’u direkt ekle
+                    } else {
+                      inputs[id] = elem.value; // Text, password, vb.
+                    }
+                  } else if (elem.tagName === 'DIV' && elem.classList.contains('status-led')) {
+                    inputs[id] = elem.classList.contains('led-green'); // StatusLed
+                  } else if (elem.tagName === 'SELECT') {
+                    inputs[id] = elem.value; // Select
+                  } else {
+                    inputs[id] = elem.value || ''; // Diğer durumlar
+                  }
                 });
                 const result = await triggerAction(item.action, inputs);
                 if (typeof result === 'object') {
                   Object.keys(result).forEach(id => {
-                    if (inputElements[id]) inputElements[id].value = result[id];
+                    if (inputElements[id]) {
+                      if (inputElements[id].type === 'checkbox') {
+                        inputElements[id].checked = result[id]; // Checkbox’ı güncelle
+                      } else {
+                        inputElements[id].value = result[id]; // Diğer input’lar
+                      }
+                    }
                   });
                 } else {
                   alert(result);
