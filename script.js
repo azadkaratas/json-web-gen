@@ -189,6 +189,14 @@ fetch('config.json')
       }
 
       contentContainer.innerHTML = '';
+    
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'loading-screen';
+      loadingDiv.innerHTML = `
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      `;
+      contentContainer.appendChild(loadingDiv);
 
       document.querySelectorAll('.accordion-button.active-tab').forEach(el => el.classList.remove('active-tab'));
       document.querySelectorAll('.list-group-item.active-subtab').forEach(el => el.classList.remove('active-subtab'));
@@ -649,6 +657,7 @@ fetch('config.json')
       for (const contentItem of itemContent.items) {
         await renderItem(contentItem, scrollableContent, subtabData, null, item);
       }
+      contentContainer.removeChild(loadingDiv);
     }
   })
   .catch(error => {
