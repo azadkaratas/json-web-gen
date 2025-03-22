@@ -97,6 +97,7 @@ body {
 }
 
 .scrollable-content {
+  scrollbar-width: none;
   margin-top: 50px;
   height: calc(100vh - 150px);
   overflow-y: auto;
