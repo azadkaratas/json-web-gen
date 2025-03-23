@@ -119,12 +119,31 @@ fetch('config.json')
       }
     }
 
+    async function fetchWithTimeout(url, options = {}, timeout = 1000) {
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      try {
+        const response = await fetch(url, { ...options, signal });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error(`Request timed out after ${timeout}ms`);
+        }
+        throw error;
+      }
+    }
+
     // --- Fetch data for an individual item with hierarchical fallback ---
     async function fetchItemData(item) {
       let itemData = {};
       if (item.fetchFromAPI) {
         try {
-          const response = await fetch(item.fetchFromAPI);
+          const response = await fetchWithTimeout(item.fetchFromAPI);
           if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
           if (item.type === 'fileReader') {
             itemData = await response.text();
@@ -133,7 +152,7 @@ fetch('config.json')
           }
         } catch (error) {
           console.error(`Error fetching from ${item.fetchFromAPI}:`, error);
-          return item.type === 'fileReader' ? `Hata: ${error.message}` : {};
+          return item.type === 'fileReader' ? `Error: ${error.message}` : {};
         }
       } else if (item.fetchData !== false && item.dataSource) {
         try {
@@ -149,11 +168,11 @@ fetch('config.json')
     async function fetchSubtabData(subtab) {
       try {
         const fetchUrl = subtab.dataSource || `${subtab.id}.json`;
-        const response = await fetch(fetchUrl);
+        const response = await fetchWithTimeout(fetchUrl);
         if (!response.ok) throw new Error(`Fetch error: ${fetchUrl}`);
         return await response.json();
       } catch (error) {
-        console.error('Hata:', error);
+        console.error('Error:', error);
         return null;
       }
     }
@@ -173,7 +192,7 @@ fetch('config.json')
         const result = await response.json();
         return result.message || 'Action successful.';
       } catch (error) {
-        return `Hata: ${error.message}`;
+        return `Error: ${error.message}`;
       }
     }
 
@@ -575,7 +594,7 @@ fetch('config.json')
             textArea.id = `${item.id}-content`;
           
             if (item.fetchFromAPI) {
-              fetch(item.fetchFromAPI)
+              fetchWithTimeout(item.fetchFromAPI)
                 .then(response => {
                   if (!response.ok) throw new Error('Dosya yüklenemedi');
                   return response.text();
@@ -584,10 +603,10 @@ fetch('config.json')
                   textArea.value = content;
                 })
                 .catch(error => {
-                  textArea.value = `Hata: ${error.message}`;
+                  textArea.value = `Error: ${error.message}`;
                 });
             } else {
-              textArea.value = 'Hata: fetchFromAPI tanımlı değil';
+              textArea.value = 'Error: fetchFromAPI is not defined!';
             }
           
             element.appendChild(textArea);
