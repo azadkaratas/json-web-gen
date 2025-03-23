@@ -196,6 +196,15 @@ fetch('config.json')
       }
     }
 
+    function replaceTemplate(htmlContent, data) {
+      let result = htmlContent;
+      Object.keys(data).forEach(key => {
+        const placeholder = `\${${key}}`;
+        result = result.split(placeholder).join(data[key]);
+      });
+      return result;
+    }
+
     // --- Function to display content for a tab or subtab ---
     async function showContent(item, contentData, tabTitle) {
       const header = document.querySelector('header');
@@ -611,13 +620,51 @@ fetch('config.json')
           
             element.appendChild(textArea);
             break;
+          case 'customHTML':
+            element = document.createElement('div');
+            element.id = item.id || `custom-html-${Math.random().toString(36).substr(2, 9)}`; // Unique ID
+            if (item.source) {
+              const customFilePath = `${item.source}`;
+              try {
+                // Fetch custom HTML file
+                const htmlResponse = await fetchWithTimeout(customFilePath);
+                if (!htmlResponse.ok) throw new Error(`Failed to fetch HTML from ${customFilePath}`);
+                let htmlTemplate = await htmlResponse.text();
+      
+                // Firstly, fetch all GET APIs
+                let currentData = {};
+                if (item.apis && item.apis.length > 0) {
+                  const getApis = item.apis.filter(api => api.method === 'GET');
+                  for (const api of getApis) {
+                    try {
+                      const apiResponse = await fetchWithTimeout(api.endpoint, { method: 'GET' });
+                      if (!apiResponse.ok) throw new Error(`Failed to fetch data from ${api.endpoint}`);
+                      const apiData = await apiResponse.json();
+                      currentData = { ...currentData, ...apiData };
+                    } catch (error) {
+                      console.error(`Error fetching GET API data from ${api.endpoint}:`, error);
+                      currentData.message = `Error: ${error.message}`;
+                    }
+                  }
+                }
+      
+                element.innerHTML = replaceTemplate(htmlTemplate, currentData);
+              } catch (error) {
+                console.error(`Error fetching custom HTML from ${customFilePath}:`, error);
+                element.innerHTML = `<p>Error: ${error.message}</p>`;
+              }
+            } else {
+              element.innerHTML = '<p>No source provided for custom HTML.</p>';
+            }
+            break;
         }
 
         const wrapper = document.createElement('div');
         if (item.type !== 'label' && item.type !== 'button' && 
             item.type !== 'customList' && item.type !== 'listItem' && 
             item.type !== 'categoryDiv' && item.type !== 'textValue' &&
-            item.type !== 'statusLed' && item.type !== 'checkbox' ) {
+            item.type !== 'statusLed' && item.type !== 'checkbox' &&
+            item.type !== 'customHTML') {
           if(item.label){
             const label = document.createElement('label');
             label.textContent = item.label;
