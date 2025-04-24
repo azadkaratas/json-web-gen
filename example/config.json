@@ -1,89 +1,258 @@
 {
-    "title": "Your Title",
-    "header": {
-      "projectName": "Your Project Name",
-      "logo": "/path/to/logo.png"
+  "title": "Smart Home Manager",
+  "header": {
+    "projectName": "SmartHome",
+    "logo": "logo.png"
+  },
+  "tabs": [
+    {
+      "id": "home-tab",
+      "title": "Home",
+      "subtabs": [
+        {
+          "id": "dashboard",
+          "title": "Dashboard",
+          "description": "Overview of your smart home devices."
+        },
+        {
+          "id": "energy-monitor",
+          "title": "Energy Monitoring",
+          "description": "Track energy usage of your devices."
+        }
+      ]
     },
-    "tabs": [
-      {
-        "title": "Tab Title 1",
-        "id": "tab-id1",
-        "subtabs": [
-          {
-            "title": "Subtab Title 1",
-            "fetchData": false,
-            "id": "subtab-id1",
-            "description": "Optional description"
-          }
-        ]
-      },
-      {
-        "title": "Tab Title 2",
-        "id": "tab-id2",
-        "subtabs": [
-          {
-            "title": "Subtab Title 2",
-            "fetchData": false,
-            "id": "subtab-id2",
-            "description": "Optional description"
-          },
-          {
-            "title": "Subtab Title 3",
-            "fetchData": false,
-            "id": "subtab-id3",
-            "description": "Optional description"
-          }
-        ]
-      }
-    ],
-    "content": [
-      {
-        "subtabId": "subtab-id1",
-        "items": [
-          {
-            "type": "text",
-            "id": "text-input",
-            "label": "Text Input"
-          },
-          {
-            "type": "button",
-            "id": "action-button",
-            "label": "Click Me",
-            "action": "customAction"
-          }
-        ]
-      },
-      {
-        "subtabId": "subtab-id2",
-        "items": [
-          {
-            "type": "text",
-            "id": "text-input",
-            "label": "Text Input"
-          },
-          {
-            "type": "button",
-            "id": "action-button",
-            "label": "Click Me",
-            "action": "customAction"
-          }
-        ]
-      },
-      {
-        "subtabId": "subtab-id3",
-        "items": [
-          {
-            "type": "text",
-            "id": "text-input",
-            "label": "Text Input"
-          },
-          {
-            "type": "button",
-            "id": "action-button",
-            "label": "Click Me",
-            "action": "customAction"
-          }
-        ]
-      }
-    ]
-  }
+    {
+      "id": "devices-tab",
+      "title": "Devices",
+      "subtabs": [
+        {
+          "id": "lighting",
+          "title": "Lighting Control",
+          "description": "Manage your smart lights."
+        },
+        {
+          "id": "thermostat",
+          "title": "Thermostat Settings",
+          "description": "Adjust thermostat settings."
+        }
+      ]
+    },
+    {
+      "id": "security-tab",
+      "title": "Security",
+      "subtabs": [
+        {
+          "id": "camera-feed",
+          "title": "Camera Feed",
+          "description": "View live camera feeds."
+        }
+      ]
+    },
+    {
+      "id": "logs-tab",
+      "title": "Logs",
+      "fetchFromAPI": "/api/device-logs",
+      "description": "View device activity logs."
+    }
+  ],
+  "content": [
+    {
+      "subtabId": "dashboard",
+      "items": [
+        {
+          "type": "customHTML",
+          "id": "home-overview",
+          "source": "custom-overview",
+          "apis": [
+            {
+              "id": "internetStatus",
+              "endpoint": "/api/internet-status",
+              "method": "GET"
+            },
+            {
+              "id": "deviceInfo",
+              "endpoint": "/api/device-info",
+              "method": "GET"
+            },
+            {
+              "id": "systemInfo",
+              "endpoint": "/api/system-info",
+              "method": "GET"
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "welcome-message",
+          "text": "Welcome to your Smart Home Manager!"
+        }
+      ]
+    },
+    {
+      "subtabId": "energy-monitor",
+      "items": [
+        {
+          "type": "categoryDiv",
+          "id": "energy-stats",
+          "title": "Energy Usage",
+          "fetchFromAPI": "/api/energy-stats",
+          "items": [
+            {
+              "type": "textValue",
+              "id": "total-consumption",
+              "text": "Total Consumption (kWh)"
+            },
+            {
+              "type": "statusLed",
+              "id": "power-status",
+              "label": "Power Status"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "reset-energy",
+          "label": "Reset Energy Data",
+          "action": "/api/reset-energy"
+        }
+      ]
+    },
+    {
+      "subtabId": "lighting",
+      "items": [
+        {
+          "type": "customList",
+          "id": "light-list",
+          "label": "Smart Lights",
+          "fetchFromAPI": "/api/lights",
+          "fields": [
+            {
+              "type": "text",
+              "id": "light-name",
+              "label": "Light Name",
+              "readonly": true
+            },
+            {
+              "type": "checkbox",
+              "id": "is-on",
+              "label": "On/Off"
+            },
+            {
+              "type": "number",
+              "id": "brightness",
+              "label": "Brightness (%)",
+              "min": 0,
+              "max": 100
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "update-lights",
+          "label": "Update Light Settings",
+          "action": "/api/update-lights"
+        }
+      ]
+    },
+    {
+      "subtabId": "thermostat",
+      "items": [
+        {
+          "type": "number",
+          "id": "temperature",
+          "label": "Set Temperature (°C)",
+          "fetchFromAPI": "/api/thermostat",
+          "value": 22,
+          "min": 15,
+          "max": 30
+        },
+        {
+          "type": "select",
+          "id": "mode",
+          "label": "Thermostat Mode",
+          "options": [
+            { "value": "cool", "text": "Cool" },
+            { "value": "heat", "text": "Heat" },
+            { "value": "auto", "text": "Auto" }
+          ],
+          "fetchFromAPI": "/api/thermostat",
+          "value": "auto"
+        },
+        {
+          "type": "checkbox",
+          "id": "eco-mode",
+          "label": "Enable Eco Mode",
+          "fetchFromAPI": "/api/thermostat",
+          "checked": false
+        },
+        {
+          "type": "radio",
+          "id": "fan-speed",
+          "label": "Fan Speed",
+          "options": [
+            { "value": "low", "text": "Low", "checked": true },
+            { "value": "medium", "text": "Medium" },
+            { "value": "high", "text": "High" }
+          ],
+          "fetchFromAPI": "/api/thermostat"
+        },
+        {
+          "type": "button",
+          "id": "save-thermostat",
+          "label": "Save Thermostat Settings",
+          "action": "/api/save-thermostat"
+        }
+      ]
+    },
+    {
+      "subtabId": "camera-feed",
+      "items": [
+        {
+          "type": "listItem",
+          "id": "camera-list",
+          "label": "Camera Feeds",
+          "items": [
+            { "label": "Living Room", "value": "http://camera1.local/feed" },
+            { "label": "Front Door", "value": "http://camera2.local/feed" }
+          ],
+          "addButtonLabel": "Add Camera"
+        },
+        {
+          "type": "file",
+          "id": "upload-snapshot",
+          "label": "Upload Snapshot",
+          "accept": "image/*"
+        },
+        {
+          "type": "textarea",
+          "id": "camera-notes",
+          "label": "Camera Notes",
+          "fetchFromAPI": "/api/camera-notes",
+          "value": "No notes available."
+        },
+        {
+          "type": "button",
+          "id": "save-camera-settings",
+          "label": "Save Camera Settings",
+          "action": "/api/save-camera-settings"
+        }
+      ]
+    },
+    {
+      "subtabId": "logs-tab",
+      "items": [
+        {
+          "type": "fileReader",
+          "id": "device-logs",
+          "fetchFromAPI": "/api/device-logs"
+        },
+        {
+          "type": "button",
+          "id": "clear-logs",
+          "label": "Clear Logs",
+          "action": "/api/clear-logs"
+        }
+      ]
+    }
+  ]
+}

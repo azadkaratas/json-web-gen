@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .overview-grid {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .overview-card {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      transition: transform 0.2s;
+    }
+    .overview-card:hover {
+      transform: translateY(-5px);
+    }
+    .overview-card h4 {
+      margin: 0 0 15px 0;
+      font-size: 1.2em;
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 5px;
+    }
+    .overview-card p {
+      margin: 8px 0;
+      font-size: 0.95em;
+      color: #34495e;
+    }
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-online {
+      background-color: #2ecc71;
+    }
+    .status-offline {
+      background-color: #e74c3c;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #2980b9;
+    }
+    @media (max-width: 600px) {
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overview-grid">
+    <div class="overview-card">
+      <h4>Internet Status</h4>
+      <p>DSL Status: ${dslStatus}</p>
+      <p>Download: <span class="highlight">${receiveSpeed}</span> Mbit/s</p>
+      <p>Upload: <span class="highlight">${sendSpeed}</span> Mbit/s</p>
+    </div>
+    <div class="overview-card">
+      <h4>Device Information</h4>
+      <p>Connected Devices: <span class="highlight">${deviceCount}</span></p>
+    </div>
+    <div class="overview-card">
+      <h4>System Information</h4>
+      <p>Model: ${modelName}</p>
+      <p>OS Version: <span class="highlight">${osVersion}</span></p>
+    </div>
+  </div>
+</body>
+</html>

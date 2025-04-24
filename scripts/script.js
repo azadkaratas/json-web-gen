@@ -250,16 +250,14 @@ fetch('config.json')
         return;
       }
 
-      // Sabit başlık için kapsayıcı
       const headerContainer = document.createElement('div');
       headerContainer.className = 'fixed-header';
 
       const pageTitle = document.createElement('h3');
-      pageTitle.className = 'sub-content-header mb-0'; // mb-0 ile alt boşluğu kaldır
+      pageTitle.className = 'sub-content-header mb-0';
       pageTitle.textContent = item.subtabs ? item.title : `${tabTitle} > ${item.title}`;
       headerContainer.appendChild(pageTitle);
 
-      // Kaydırılabilir içerik için kapsayıcı
       const scrollableContent = document.createElement('div');
       scrollableContent.className = 'scrollable-content';
 
@@ -270,7 +268,6 @@ fetch('config.json')
         scrollableContent.appendChild(description);
       }
 
-      // contentContainer’a ekle
       contentContainer.appendChild(headerContainer);
       contentContainer.appendChild(scrollableContent);
 
@@ -435,18 +432,18 @@ fetch('config.json')
                   const elem = inputElements[id];
                   if (elem.tagName === 'INPUT') {
                     if (elem.type === 'checkbox') {
-                      inputs[id] = elem.checked; // Checkbox için checked kullan
+                      inputs[id] = elem.checked;
                     } else if (elem.type === 'file') {
-                      inputs[id] = elem; // File input’u direkt ekle
+                      inputs[id] = elem;
                     } else {
-                      inputs[id] = elem.value; // Text, password, vb.
+                      inputs[id] = elem.value;
                     }
                   } else if (elem.tagName === 'DIV' && elem.classList.contains('status-led')) {
                     inputs[id] = elem.classList.contains('led-green'); // StatusLed
                   } else if (elem.tagName === 'SELECT') {
                     inputs[id] = elem.value; // Select
                   } else {
-                    inputs[id] = elem.value || ''; // Diğer durumlar
+                    inputs[id] = elem.value || '';
                   }
                 });
                 const result = await triggerAction(item.action, inputs);
@@ -454,9 +451,9 @@ fetch('config.json')
                   Object.keys(result).forEach(id => {
                     if (inputElements[id]) {
                       if (inputElements[id].type === 'checkbox') {
-                        inputElements[id].checked = result[id]; // Checkbox’ı güncelle
+                        inputElements[id].checked = result[id];
                       } else {
-                        inputElements[id].value = result[id]; // Diğer input’lar
+                        inputElements[id].value = result[id];
                       }
                     }
                   });
@@ -473,7 +470,7 @@ fetch('config.json')
           
             const label = document.createElement('span');
             label.className = 'status-led-label me-3';
-            label.textContent = item.label || 'Durum';
+            label.textContent = item.label || 'Status';
           
             const led = document.createElement('div');
             led.className = `status-led ${fetchFailed ? 'led-red' : (itemData[item.id] ? 'led-green' : 'led-red')}`;
@@ -605,7 +602,7 @@ fetch('config.json')
             if (item.fetchFromAPI) {
               fetchWithTimeout(item.fetchFromAPI)
                 .then(response => {
-                  if (!response.ok) throw new Error('Dosya yüklenemedi');
+                  if (!response.ok) throw new Error('File could not load');
                   return response.text();
                 })
                 .then(content => {
