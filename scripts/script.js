@@ -145,14 +145,14 @@ fetch('config.json')
         try {
           const response = await fetchWithTimeout(item.fetchFromAPI);
           if (!response.ok) throw new Error(`Failed to fetch data from ${item.fetchFromAPI}`);
-          if (item.type === 'fileReader') {
+          if (item.type === 'fileReader' || item.type === 'logFile') {
             itemData = await response.text();
           } else {
             itemData = await response.json();
           }
         } catch (error) {
           console.error(`Error fetching from ${item.fetchFromAPI}:`, error);
-          return item.type === 'fileReader' ? `Error: ${error.message}` : {};
+          return (item.type === 'fileReader' || item.type === 'logFile')? `Error: ${error.message}` : {};
         }
       } else if (item.fetchData !== false && item.dataSource) {
         try {
@@ -652,6 +652,42 @@ fetch('config.json')
               }
             } else {
               element.innerHTML = '<p>No source provided for custom HTML.</p>';
+            }
+            break;
+          case 'logFile':
+            element = document.createElement('div');
+            element.className = 'log-file-container';
+            element.id = item.id;
+        
+            if (item.fetchFromAPI) {
+                fetchWithTimeout(item.fetchFromAPI)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Log file could not load');
+                        return response.text();
+                    })
+                    .then(content => {
+                        let processedContent = content
+                            .replace(/\033\[31m(.*?)\033\[0m/g, '<span style="color: #FF0000;">$1</span>')
+                            .replace(/\033\[33m(.*?)\033\[0m/g, '<span style="color: #FFC107;">$1</span>')
+                            .replace(/\033\[32m(.*?)\033\[0m/g, '<span style="color: #28a745;">$1</span>')
+                            .replace(/\033\[34m(.*?)\033\[0m/g, '<span style="color: #007bff;">$1</span>');
+        
+                        processedContent = processedContent.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        processedContent = processedContent
+                            .replace(/&lt;span style="color: #FF0000;"&gt;(.*?)&lt;\/span&gt;/g, '<span style="color: #FF0000;">$1</span>')
+                            .replace(/&lt;span style="color: #FFC107;"&gt;(.*?)&lt;\/span&gt;/g, '<span style="color: #FFC107;">$1</span>')
+                            .replace(/&lt;span style="color: #28a745;"&gt;(.*?)&lt;\/span&gt;/g, '<span style="color: #28a745;">$1</span>')
+                            .replace(/&lt;span style="color: #007bff;"&gt;(.*?)&lt;\/span&gt;/g, '<span style="color: #007bff;">$1</span>');
+        
+                        processedContent = processedContent.replace(/(\r\n|\n|\r)/g, '<br>');
+        
+                        element.innerHTML = processedContent;
+                    })
+                    .catch(error => {
+                        element.innerHTML = `Error: ${error.message}`;
+                    });
+            } else {
+                element.innerHTML = 'Error: fetchFromAPI is not defined!';
             }
             break;
         }

@@ -400,3 +400,21 @@ body {
     width: auto;
   }
 }
+
+.log-file-container {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap; /* Tab ve boşlukları korur */
+  color: #333;
+}
+
+.log-file-container .error {
+  color: #dc3545;
+  font-weight: 500;
+}
