@@ -2,7 +2,7 @@
 
 `JSON-Web-Gen` is a lightweight and flexible JavaScript library designed to generate dynamic, API-driven web interfaces from a single `config.json` file. It provides a tabbed interface with a variety of UI elements, supports API integration for fetching data and triggering actions, and is built to be generic, making it adaptable to various use cases such as device management, smart home systems, or network administration panels.
 
-**You can reach out and test the live demo in: https://lowlevelcode.com/json-web-gen/**
+**You can reach out and test the live demo in: http://json-web-gen-example.onrender.com/**. It takes some time to run initially because of Render.
 
 ## Table of Contents
 - [Features](#features)
