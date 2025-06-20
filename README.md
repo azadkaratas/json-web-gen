@@ -265,6 +265,7 @@ A static text label for displaying information.
 A container to group related items under a title.
 - **title**: Title of the category.
 - **items**: Array of child items.
+- **align**: Optional. Can be set to only 'horizontal'.
 - **fetchFromAPI**: Optional API to fetch data for child items.
 **Example**:
 ```json
@@ -272,6 +273,7 @@ A container to group related items under a title.
   "type": "categoryDiv",
   "id": "system-stats",
   "title": "System Stats",
+  "align": "horizontal",
   "fetchFromAPI": "/api/stats",
   "items": [
     { "type": "textValue", "id": "uptime", "text": "Uptime (minutes)" },
@@ -346,6 +348,21 @@ Embeds a custom HTML template with dynamic data from APIs.
 }
 ```
 The HTML template can contain placeholders (e.g., `${variable}`) that will be replaced with API data.
+
+#### 17. `logFile`
+Displays the content of a log file with ANSI color.
+- **fetchFromAPI**: API endpoint to fetch the log file content.
+**Example**:
+```json
+{
+  "type": "logFile",
+  "id": "logReader",
+  "fetchFromAPI": "/api/readfile/var/log/app"
+}
+```
+
+## Custom CSS
+You can use your additional custom CSS file by simply adding it to `css/custom.css` file.
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.
