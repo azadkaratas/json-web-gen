@@ -274,6 +274,10 @@ body {
   margin-bottom: 15px;
 }
 
+.category-div[style*="display: flex"] > div {
+  margin-bottom: 0;
+}
+
 .list-item-container {
   border: 1px solid #dee2e6;
   padding: 15px;
@@ -417,4 +421,18 @@ body {
 .log-file-container .error {
   color: #dc3545;
   font-weight: 500;
+}
+.category-div {
+  margin-bottom: 15px;
+}
+
+.category-div h4 {
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Flex içindeki wrapper'lar için stil (isteğe bağlı) */
+.category-div[style*="display: flex"] > div {
+  margin-bottom: 0; /* Flex içinde alt boşluğu kaldır */
 }

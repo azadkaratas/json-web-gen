@@ -465,16 +465,16 @@ fetch('config.json')
             break;
           case 'statusLed':
             element = document.createElement('div');
-            element.className = 'status-led-container d-flex align-items-center mb-2';
+            element.className = 'status-led-container d-flex align-items-center';
             element.id = item.id;
-          
+
             const label = document.createElement('span');
             label.className = 'status-led-label me-3';
             label.textContent = item.label || 'Status';
-          
+
             const led = document.createElement('div');
             led.className = `status-led ${fetchFailed ? 'led-red' : (itemData[item.id] ? 'led-green' : 'led-red')}`;
-            
+
             element.appendChild(label);
             element.appendChild(led);
             inputElements[item.id] = led;
@@ -488,14 +488,25 @@ fetch('config.json')
             element = document.createElement('div');
             element.className = 'category-div';
             element.id = item.id;
-            const categoryTitle = document.createElement('h4');
-            categoryTitle.textContent = item.title || 'Category';
-            element.appendChild(categoryTitle);
 
-            // Render child items, passing categoryData as parentData
-            for (const subItem of item.items) {
-              await renderItem(subItem, element, itemData, item, subtabItem);
+            if (item.title) {
+                const categoryTitle = document.createElement('h4');
+                categoryTitle.textContent = item.title;
+                element.appendChild(categoryTitle);
             }
+
+            const itemsContainer = document.createElement('div');
+            if (item.align === 'horizontal') {
+                itemsContainer.style.display = 'flex';
+                itemsContainer.style.flexWrap = 'wrap';
+                itemsContainer.style.gap = '15px';
+                itemsContainer.style.alignItems = 'center';
+            }
+
+            for (const subItem of item.items || []) {
+                await renderItem(subItem, itemsContainer, itemData, item, subtabItem);
+            }
+            element.appendChild(itemsContainer);
             break;
           case 'customList':
             element = document.createElement('div');
