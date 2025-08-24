@@ -1,5 +1,6 @@
 {
   "title": "Smart Home Manager",
+  "login": true,
   "header": {
     "projectName": "SmartHome",
     "logo": "logo.png"

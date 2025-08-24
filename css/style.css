@@ -1,9 +1,11 @@
+/* General Styles */
 body {
   height: 100%;
   margin: 0;
   background-color: #f5f5f5;
 }
 
+/* Main Container */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -14,17 +16,20 @@ body {
   flex-direction: column;
 }
 
+/* Content Area */
 .content-area {
   padding: 0;
   flex: 1;
   animation: fadeIn 0.3s ease-in;
 }
 
+/* Fade In Animation */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
+/* Sub Content Header */
 .sub-content-header {
   font-size: 1.2rem;
   font-weight: bold;
@@ -32,12 +37,14 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* Sub Content Description */
 .sub-content-description {
   font-size: 1rem;
   color: #666;
   margin-bottom: 1rem;
 }
 
+/* Form Controls in Content Area */
 .content-area .form-control {
   max-width: 500px;
 }
@@ -46,6 +53,7 @@ body {
   margin-top: 10px;
 }
 
+/* Main Content Section */
 #content {
   position: relative;
   height: calc(100vh - 100px);
@@ -53,6 +61,7 @@ body {
   margin-top: 100px;
 }
 
+/* Fixed Header */
 .fixed-header {
   position: fixed;
   top: 100px;
@@ -63,6 +72,7 @@ body {
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Loading Screen */
 .loading-screen {
   position: absolute;
   top: 0;
@@ -77,6 +87,7 @@ body {
   z-index: 1000;
 }
 
+/* Spinner Animation */
 .spinner {
   width: 40px;
   height: 40px;
@@ -97,6 +108,7 @@ body {
   color: #333;
 }
 
+/* Scrollable Content */
 .scrollable-content {
   scrollbar-width: none;
   margin-top: 50px;
@@ -105,6 +117,7 @@ body {
   padding: 15px;
 }
 
+/* Responsive Design */
 @media (max-width: 767px) {
   .fixed-header {
     display: none;
@@ -113,7 +126,7 @@ body {
   header::after {
     content: attr(data-breadcrumb);
     position: absolute;
-    left: 100px;
+    left: 85px;
   }
 
   .scrollable-content {
@@ -126,6 +139,7 @@ body {
   }
 }
 
+/* Sidebar Styles */
 .sidebar {
   position: fixed;
   left: -270px;
@@ -142,6 +156,7 @@ body {
   left: 0;
 }
 
+/* Sidebar Overlay */
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -160,11 +175,13 @@ body {
   visibility: visible;
 }
 
+/* Sidebar Header */
 .sidebar-header {
   padding: 20px;
   text-align: center;
 }
 
+/* List Group Items */
 .list-group-item {
   border: none;
   padding: 10px 15px;
@@ -178,6 +195,7 @@ body {
   font-weight: bold;
 }
 
+/* Accordion Styles */
 .accordion-button {
   background-color: #e9ecef;
   transition: background-color 0.3s ease;
@@ -195,6 +213,7 @@ body {
   font-weight: bold;
 }
 
+/* Status LED Styles */
 .status-led-container {
   display: flex;
   align-items: center;
@@ -224,6 +243,7 @@ body {
   box-shadow: 0 0 9px rgba(220, 53, 69, 0.8);
 }
 
+/* Custom Checkbox Styles */
 .custom-checkbox {
   width: 20px;
   height: 20px;
@@ -258,6 +278,7 @@ body {
   cursor: not-allowed;
 }
 
+/* Category Section Styles */
 .category-div {
   border: 1px solid #dee2e6;
   padding: 15px;
@@ -279,6 +300,7 @@ body {
   margin-bottom: 0;
 }
 
+/* List Item Container Styles */
 .list-item-container {
   border: 1px solid #dee2e6;
   padding: 15px;
@@ -307,6 +329,7 @@ body {
   margin-right: 10px;
 }
 
+/* Custom List Container Styles */
 .custom-list-container {
   border: 1px solid #dee2e6;
   padding: 15px;
@@ -324,6 +347,7 @@ body {
   margin-bottom: 15px;
 }
 
+/* Custom List Table Styles */
 .custom-list-table {
   width: 100%;
   border-collapse: collapse;
@@ -350,6 +374,7 @@ body {
   background: transparent;
 }
 
+/* Text Value Styles */
 .text-value {
   align-items: center;
   gap: 5px;
@@ -363,6 +388,7 @@ body {
   color: #333;
 }
 
+/* File Reader Container */
 .file-reader-container textarea {
   width: 100%;
   height: 650px;
@@ -370,6 +396,7 @@ body {
   resize: vertical;
 }
 
+/* Desktop Layout Adjustments */
 @media (min-width: 768px) {
   .content-wrapper { flex: 1; display: flex; }
   .content-area {
@@ -404,8 +431,13 @@ body {
   header .col-md-2 img {
     width: auto;
   }
+
+  .header-logo {
+    padding-inline-start: 100px;
+  }
 }
 
+/* Log File Container */
 .log-file-container {
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.9em;
@@ -415,7 +447,7 @@ body {
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow-x: auto;
-  white-space: pre-wrap; /* Tab ve boşlukları korur */
+  white-space: pre-wrap; /* Preserves tabs and spaces */
   color: #333;
 }
 
@@ -423,6 +455,8 @@ body {
   color: #dc3545;
   font-weight: 500;
 }
+
+/* Category Section Adjustments */
 .category-div {
   margin-bottom: 15px;
 }
@@ -433,7 +467,27 @@ body {
   color: #333;
 }
 
-/* Flex içindeki wrapper'lar için stil (isteğe bağlı) */
+/* Optional: Flex wrapper styles inside category-div */
 .category-div[style*="display: flex"] > div {
-  margin-bottom: 0; /* Flex içinde alt boşluğu kaldır */
+  margin-bottom: 0; /* Remove bottom margin inside flex */
+}
+
+/* Login Card Styles */
+.login-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  animation: fadeIn 0.5s ease;
+}
+
+.login-card h2 {
+  color: #0d5ef0;
+}
+
+.login-card .btn-primary {
+  background: linear-gradient(0.25turn, #0d5ef0, #0250c3, #032d55);
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
 }

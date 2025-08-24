@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <div class="login-container d-flex justify-content-center align-items-center">
+    <div class="login-card p-5">
+      <div class="text-center mb-4">
+        <img id="loginLogo" src="" alt="Logo" class="img-fluid mb-2" style="max-height: 80px;">
+        <h2 id="loginProjectName" class="fw-bold">Project</h2>
+        <p class="text-muted">Please login to continue</p>
+      </div>
+      <form id="loginForm">
+        <div class="mb-3 input-group input-group-lg">
+          <span class="input-group-text" style="font-size: 1.3rem;">👤</span>
+          <input type="text" id="username" class="form-control" placeholder="Username" required>
+        </div>
+        <div class="mb-3 input-group input-group-lg">
+          <span class="input-group-text" style="font-size: 1.3rem;">🔒</span>
+          <input type="password" id="password" class="form-control" placeholder="Password" required>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="rememberMe">
+          <label class="form-check-label" for="rememberMe">
+            Remember me
+          </label>
+          <p class="text-muted">username: admin, password: password123</p>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold btn-lg">Login</button>
+        <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, redirect to index.html
+    fetch('/api/check-login', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.logged_in) {
+          window.location.href = "index.html";
+          return;
+        }
+      });
+
+    // Load config for logo and project name
+    fetch('config.json')
+      .then(res => res.json())
+      .then(cfg => {
+        if (cfg.header) {
+          document.getElementById('loginLogo').src = cfg.header.logo || "";
+          document.getElementById('loginProjectName').textContent = cfg.header.projectName || "Project";
+        }
+      });
+
+    // Form submit
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const errorDiv = document.getElementById('loginError');
+        if (res.ok) {
+          window.location.href = "index.html";
+        } else {
+          const data = await res.json();
+          errorDiv.textContent = data.message || "Invalid username or password.";
+          errorDiv.classList.remove('d-none');
+        }
+      } catch (err) {
+        const errorDiv = document.getElementById('loginError');
+        errorDiv.textContent = "Login error: " + err.message;
+        errorDiv.classList.remove('d-none');
+      }
+    });
+  </script>
+</body>
+</html>

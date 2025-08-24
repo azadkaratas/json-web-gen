@@ -6,7 +6,6 @@
   <!-- Title will be filled with script -->
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/custom.css" id="custom-css"> <!-- User custom.css file -->
   <script src="scripts/bootstrap.bundle.min.js"></script>
   <script type="module" src="scripts/script.js"></script>
 </head>
@@ -16,18 +15,21 @@
     <header class="row text-white p-3 align-items-center" style="
     max-width: 1200px;position: fixed; height: 100px;
     width: inherit; background: linear-gradient(0.25turn, #0d5ef0, #0250c3, #032d55);">
-      <div class="col-3 col-md-2 d-flex align-items-center">
+      <div class="col-3 col-md-3 d-flex align-items-center header-logo" style="justify-content: flex-start;">
         <!-- Hamburger Menu (Mobile) -->
         <button id="menuToggle" class="btn btn-light d-md-none me-2">☰</button>
         <!-- Logo (Wide Screen) -->
         <!-- Logo will be filled with script -->
         <img src="" alt="Logo" class="img-fluid d-none d-md-block" style="max-height: 50px;">
       </div>
-      <div class="col-6 col-md-8 text-center">
+      <div class="col-6 col-md-6 text-center">
         <!-- Project Name (Wide Screen) -->
         <h1 class="d-none d-md-block"><!-- Project name will be filled with script --></h1>
         <!-- Empty for mobile -->
         <h1 class="d-md-none">&nbsp;</h1>
+      </div>
+      <div class="col-3 col-md-3 text-end" style="justify-content: flex-end; display: flex; padding-inline-end: 0px;">
+        <button id="logoutBtn" class="btn btn-light" style="visibility: hidden;" title="Logout">⏻</button>
       </div>
     </header>
 

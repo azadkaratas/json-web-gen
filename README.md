@@ -8,6 +8,7 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Setup API Server](#setup-api-server)
+- [Login System](#login-system)
 - [Configuration](#configuration)
   - [Structure of `config.json`](#structure-of-configjson)
   - [Supported Item Types](#supported-item-types)
@@ -21,6 +22,7 @@
 - **Responsive Design**: Built with Bootstrap 5 for a mobile-friendly layout.
 - **Custom HTML Support**: Embed custom HTML templates with dynamic data from APIs.
 - **Generic Core**: The `script.js` core is generic, allowing for reuse across different projects without modification.
+- **Login System**: Optional login requirement via config (see below).
 
 ## Installation
 1. Clone the repository:
@@ -28,34 +30,34 @@
    ```
    cd json-web-gen
    ```
-3. Install Node.js dependencies (required for the API server):
+3. Install Python dependencies (required for the API server):
    ```
-   npm install express
+   pip install flask werkzeug
    ```
 4. Start the API server (see [Setup API Server](#setup-api-server) for details).
 
 ### Dependencies
 - **Bootstrap 5**: Included via CDN in `index.html` for styling and responsive layout.
 - **Bootstrap JS Bundle**: Included for handling accordion and collapse functionality.
-- **Node.js and Express**: Required for running the API server (`app.js`).
+- **Python Flask**: Required for running the API server (`app.py`).
 
 ## Setup API Server
-`JSON-Web-Gen` relies on a backend API server to fetch data and handle actions. A sample `app.js` file is provided to simulate the required API endpoints.
+`JSON-Web-Gen` relies on a backend API server to fetch data and handle actions. A sample `app.py` file is provided to simulate the required API endpoints.
 
-1. Ensure Node.js is installed on your system.
-2. Install Express:
+1. Ensure Python is installed on your system.
+2. Install Flask and Werkzeug:
    ```
-   npm install express
+   pip install flask werkzeug
    ```
 3. Run the API server:
    ```
-   node app.js
+   python app.py
    ```
    This will start a server at `http://localhost:8000`, serving both static files (HTML, CSS, JS) and API endpoints.
 4. Open your browser and navigate to `http://localhost:8000`.
 
 ### Required API Endpoints
-The library fetches data from and sends actions to specific API endpoints defined in `config.json`. Your backend server must implement these endpoints. The provided `app.js` includes mock implementations for testing. Below are the types of endpoints you need to support:
+The library fetches data from and sends actions to specific API endpoints defined in `config.json`. Your backend server must implement these endpoints. The provided `app.py` includes mock implementations for testing. Below are the types of endpoints you need to support:
 
 - **GET Endpoints**: Used to fetch data for UI elements (e.g., `/api/settings` for a `select` item or `/api/logs` for a `fileReader`).
   - Expected response: JSON object for most items (e.g., `{"value": "example"}`), plain text for `fileReader`.
@@ -63,7 +65,115 @@ The library fetches data from and sends actions to specific API endpoints define
   - Expected request: JSON body containing the current values of all input elements in the subtab.
   - Expected response: JSON object (e.g., `{"success": true, "message": "Settings saved"}`).
 
-You can modify `app.js` to connect to a real backend or database as needed.
+You can modify `app.py` to connect to a real backend or database as needed.
+
+## Login System
+
+**New Feature:**  
+You can now require users to log in before accessing the application. To enable this, add the following line to your `config.json` file:
+
+```json
+"login": true
+```
+
+When `"login": true` is set, the application will show a login screen and require authentication before allowing access to the main interface.
+
+### Example config.json snippet:
+```json
+{
+  "title": "Smart Home Manager",
+  "login": true,
+  ...
+}
+```
+
+### API Endpoints for Login
+
+The backend must implement the following endpoints for login functionality:
+
+- `POST /api/login` — Accepts `{ username, password }` and returns `{ success, message }`.
+- `POST /api/logout` — Logs out the user.
+- `GET /api/check-login` — Returns `{ logged_in: true/false }`.
+
+Sample implementation is provided in `app.py` (Python/Flask).
+
+### Example Python Flask API Server
+
+You can run the backend with Python Flask. Below is a minimal example (`app.py`) that supports login and all required endpoints:
+
+```python
+from flask import Flask, jsonify, send_from_directory, request, session, redirect
+import os, secrets
+from werkzeug.security import generate_password_hash, check_password_hash
+
+app = Flask(__name__, static_folder='.')
+app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(16))
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+USERS = {
+    'admin': generate_password_hash("password123")
+}
+
+@app.route('/')
+def root():
+    if not session.get('logged_in'):
+        return send_from_directory('.', 'login.html')
+    return send_from_directory('.', 'index.html')
+
+@app.route('/index.html')
+def index_protected():
+    if not session.get('logged_in'):
+        return redirect('/login.html')
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    if path == "index.html":
+        return redirect('/')
+    return send_from_directory('.', path)
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    if username in USERS and check_password_hash(USERS[username], password):
+        session['logged_in'] = True
+        session['username'] = username
+        return jsonify({'success': True, 'message': 'Login successful'})
+    return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({'success': True, 'message': 'Logged out'})
+
+@app.route('/api/check-login', methods=['GET'])
+def check_login():
+    return jsonify({'logged_in': session.get('logged_in', False)})
+
+# ... other API endpoints as in app.py ...
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000, debug=True)
+```
+
+#### How to Run with Flask
+
+1. Install Flask and Werkzeug:
+   ```
+   pip install flask werkzeug
+   ```
+2. Save the above code as `app.py` in your project directory.
+3. Run the server:
+   ```
+   python app.py
+   ```
+4. Open your browser and navigate to `http://localhost:8000`.
+
+---
 
 ## Configuration
 The entire interface is driven by a single `config.json` file, which defines the structure, content, and behavior of the application.

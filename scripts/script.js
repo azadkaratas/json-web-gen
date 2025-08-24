@@ -1,18 +1,30 @@
-// Fetch the configuration file (config.json) to initialize the application
 fetch('config.json')
   .then(response => {
     if (!response.ok) throw new Error('Config file could not be loaded');
     return response.json();
   })
   .then(data => {
+    // If login is required
+    if (data.login) {
+      fetch('/api/check-login', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.logged_in == "false") {
+          window.location.href = "login.html";
+          return;
+        }
+      });
+      // Set visibility of logoutBtn
+      document.getElementById('logoutBtn').style.visibility = 'visible';
+    }
     document.title = data.title || 'Device Configuration';
 
     const accordionContainer = document.getElementById('accordion');
     const contentContainer = document.getElementById('content');
 
     // --- Customize the header and sidebar ---
-    const headerProjectName = document.querySelector('header .col-6.col-md-8 h1');
-    const headerLogo = document.querySelector('header .col-3.col-md-2 img');
+    const headerProjectName = document.querySelector('header .col-6.col-md-6 h1');
+    const headerLogo = document.querySelector('header .col-3.col-md-3 img');
     const sidebarHeaderLogo = document.querySelector('.sidebar-header img');
     const sidebarHeaderTitle = document.querySelector('.sidebar-header h2');
 
@@ -798,3 +810,31 @@ document.addEventListener('click', function (event) {
     overlay.classList.remove('active');
   }
 });
+
+// Logout Button
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        window.location.replace("login.html");
+      } else {
+        console.error('Logout failed:', response.statusText);
+        alert('Logout failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      alert('An error occurred during logout. Please check your connection.');
+    }
+  });
+}
